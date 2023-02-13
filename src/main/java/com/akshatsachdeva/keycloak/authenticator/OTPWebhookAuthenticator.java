@@ -38,7 +38,8 @@ public class OTPWebhookAuthenticator implements Authenticator {
 					OTPWebhookAuthenticatorConfig.class);
 
 			String otp = SecretGenerator.getInstance().randomString(config.getOtpLength(), config.getAllowedChars());
-			String otpExpiry = Long.toString(System.currentTimeMillis() + (config.getOtpExpirySeconds() * 1000L));
+			long otpExpiryTimestamp = System.currentTimeMillis() + (config.getOtpExpirySeconds() * 1000L);
+			String otpExpiry = Long.toString(otpExpiryTimestamp);
 
 			AuthenticationSessionModel authSession = context.getAuthenticationSession();
 			authSession.setAuthNote(OTPWebhookAuthenticatorAuthNote.OTP.name(), otp);
@@ -47,12 +48,12 @@ public class OTPWebhookAuthenticator implements Authenticator {
 			UserModel user = context.getUser();
 			String userIdentifier = user.getFirstAttribute(config.getUserIdentifyingAttribute());
 
-			WebhookSPIRequest webhookRequest = new WebhookSPIRequest(userIdentifier, otp);
+			WebhookSPIRequest webhookRequest = new WebhookSPIRequest(userIdentifier, otp, otpExpiryTimestamp);
 			String requestBody = OBJECT_MAPPER.writeValueAsString(webhookRequest);
 			HttpResponse<String> response = WebhookSPIIntegrationHelper.trigger(config.getWebhook(),
 					config.getTimeoutSeconds(), requestBody, config.isEnableLogging());
 
-			if (response.statusCode() > 400) {
+			if (response.statusCode() >= 400) {
 				throw new RuntimeException(response.body());
 			}
 
