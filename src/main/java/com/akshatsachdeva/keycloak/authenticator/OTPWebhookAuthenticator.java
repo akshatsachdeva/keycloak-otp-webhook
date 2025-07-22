@@ -2,7 +2,7 @@ package com.akshatsachdeva.keycloak.authenticator;
 
 import java.net.http.HttpResponse;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
